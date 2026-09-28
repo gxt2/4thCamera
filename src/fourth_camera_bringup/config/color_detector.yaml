@@ -1,0 +1,9 @@
+/camera/color_detector:
+  ros__parameters:
+    label: red
+    # OpenCV HSV (H: 0-179). lower H > upper H means the hue range wraps (red).
+    hsv_lower: [170, 120, 70]
+    hsv_upper: [10, 255, 255]
+    min_area: 100.0
+    max_blobs: 10
+    publish_annotated: true

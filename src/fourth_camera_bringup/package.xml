@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fourth_camera_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files, configs and Gazebo worlds for fourth_camera (sim and real)</description>
+  <maintainer email="tetsu@admat.jp">tetsu</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>fourth_camera</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>rqt_image_view</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

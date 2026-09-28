@@ -1,0 +1,12 @@
+/camera/usb_camera:
+  ros__parameters:
+    device: /dev/video0
+    # Measured on the Sonix USB Camera (26e0:3c13):
+    #   YUYV 640x480 -> 30 fps, MJPG 1280x720 -> ~17 fps
+    width: 640
+    height: 480
+    fps: 30.0
+    pixel_format: YUYV
+    frame_id: camera_optical_frame
+    # Path to a camera_calibration YAML. Empty = uncalibrated CameraInfo.
+    camera_info_file: ""

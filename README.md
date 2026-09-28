@@ -64,6 +64,10 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
+**新しいターミナルでは毎回 `source ~/Development/4thCamera/install/setup.bash` が必要。**
+忘れると `Package 'fourth_camera_bringup' not found` になる
+(`~/.bashrc` は `/opt/ros/jazzy` と 3rdGazeboCtrl しか読み込んでいないため)。
+
 ## 実行
 
 ```bash

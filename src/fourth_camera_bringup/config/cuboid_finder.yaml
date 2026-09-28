@@ -1,0 +1,15 @@
+/camera/cuboid_finder:
+  ros__parameters:
+    label: blue_cuboid
+    # Target: blue box 16 x 5 x 4 cm. The real one is cyan-ish blue (OpenCV H ~86-100).
+    hsv_lower: [85, 80, 40]
+    hsv_upper: [130, 255, 255]
+    min_area: 300.0        # px; smaller blobs ignored (~16 cm at >2.5 m on the real camera)
+    # Shape gate on the blob's min-area rectangle. Side views of 16x5x4 give 3.2-4.0;
+    # oblique views are shorter. A cube (aspect ~1) is rejected.
+    min_aspect: 2.0
+    max_aspect: 6.0
+    min_fill: 0.7          # blob area / rectangle area
+    length_m: 0.16         # long edge, for the distance estimate
+    on_frames: 3           # consecutive hits before FOUND
+    off_frames: 10         # consecutive misses before lost

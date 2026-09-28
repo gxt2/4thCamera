@@ -94,6 +94,31 @@
       </link>
     </model>
 
+    <!-- Search target for the cuboid demo: 16 x 5 x 4 cm, cyan-ish blue like the real one -->
+    <model name="blue_cuboid">
+      <pose>1.8 -0.3 0.02 0 0 0.4</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.1</mass>
+          <inertia>
+            <ixx>3.4e-5</ixx><iyy>2.3e-4</iyy><izz>2.3e-4</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.16 0.05 0.04</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.16 0.05 0.04</size></box></geometry>
+          <material>
+            <ambient>0.1 0.55 0.9 1</ambient>
+            <diffuse>0.1 0.55 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Distractor for the cuboid demo: blue but cube-shaped, must NOT be reported -->
     <model name="blue_box">
       <static>true</static>
       <pose>2.5 0.8 0.2 0 0 0.4</pose>

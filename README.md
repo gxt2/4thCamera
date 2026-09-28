@@ -20,7 +20,9 @@ src/
   fourth_camera/            ノード本体 (ament_python)
     usb_camera_node.py      実機用 V4L2 カメラドライバ (OpenCV)
     color_detector.py       色ブロブ検出ロジック (ROS 非依存, テスト対象)
-    color_detector_node.py  検出ノード
+    color_detector_node.py  検出ノード (赤色ブロブ)
+    cuboid_detector.py      既知サイズの直方体探索ロジック (ROS 非依存, テスト対象)
+    cuboid_finder_node.py   直方体探索 + インジケータ ノード
     test/                   pytest
   fourth_camera_bringup/    launch / 設定 / Gazebo ワールド
     launch/sim.launch.py        Gazebo + bridge + 処理
@@ -28,7 +30,7 @@ src/
     launch/processing.launch.py 共通部分 (光学系 TF, 検出ノード, ビューア)
     config/*.yaml
     config/usb_camera_calibration.yaml  実機カメラの校正結果
-    worlds/camera_world.sdf     固定カメラ + 赤いボール + 青い箱
+    worlds/camera_world.sdf     固定カメラ + 赤いボール + 青い直方体 (探索対象) + 青い立方体 (紛らわしい物)
 tools/
   make_checkerboard.py      印刷用チェッカーボード PDF 生成 (依存なし)
   refine_calibration.py     校正データからブレた画像を除いて再校正
@@ -42,8 +44,12 @@ docs/
 |---|---|---|
 | `/camera/image_raw` | sensor_msgs/Image | sim: gz bridge / real: `usb_camera_node` |
 | `/camera/camera_info` | sensor_msgs/CameraInfo | 同上 |
-| `/camera/detections` | vision_msgs/Detection2DArray | `color_detector` |
+| `/camera/detections` | vision_msgs/Detection2DArray | `color_detector` / `cuboid_finder` |
 | `/camera/image_annotated` | sensor_msgs/Image | `color_detector` (購読者がいる時のみ) |
+| `/camera/target_found` | std_msgs/Bool (transient_local) | `cuboid_finder` (状態が変わった時) |
+| `/camera/image_indicator` | sensor_msgs/Image | `cuboid_finder` (購読者がいる時のみ) |
+
+どちらの検出ノードを動かすかは launch 引数 `detector:=color|cuboid` で選ぶ (既定 `color`)。
 
 画像の `frame_id` は両方とも `camera_optical_frame`。
 TF: `camera_link` → `camera_optical_frame` (光学系規約: z 前方, x 右, y 下)。
@@ -73,6 +79,49 @@ ros2 launch fourth_camera_bringup real.launch.py
 ```
 
 シミュレーションでは Gazebo GUI で赤いボールをドラッグすると検出結果が追従する。
+
+## デモ: 青い直方体の探索とインジケータ
+
+16 x 5 x 4 cm の青い直方体をカメラで探し、見つかったらインジケータで知らせる。
+
+```bash
+ros2 launch fourth_camera_bringup real.launch.py detector:=cuboid   # 実機
+ros2 launch fourth_camera_bringup sim.launch.py  detector:=cuboid   # Gazebo
+```
+
+- rqt_image_view に `/camera/image_indicator` が出る。右上のランプが **FOUND (緑)** /
+  **SEARCHING (灰)**、発見中は画面の縁も緑になる。採用した候補は緑枠、形で除外した青い領域は灰枠。
+- `/camera/target_found` (Bool) にも出す。LED・ブザー等の物理インジケータはこれを購読すればよい。
+  transient_local なので、後から購読しても現在の状態が届く。
+- 長辺 16cm と校正済みの fx から、おおよその距離を `~XX cm` と表示する
+  (長辺が画像面とほぼ平行なときだけ正しい。物体が画像の端で切れているときは表示しない)。
+
+### 判定方法 (`config/cuboid_finder.yaml`)
+
+1. HSV で青を抜く: H 85–130, S ≥ 80, V ≥ 40。実物はシアン寄りの青 (H 86–100)。
+2. 各領域を囲む回転長方形の **縦横比 2.0–6.0** と **充填率 (領域面積 / 長方形面積) ≥ 0.7** で形を判定する。
+   立方体 (縦横比 約1) やケーブル等の細くて不規則な青い物を除外するため。
+3. 3 フレーム連続で見えたら FOUND、10 フレーム連続で見えなければ SEARCHING に戻す (チラつき防止)。
+
+### 検証結果 (2026-09-28)
+
+- **Gazebo**: 直方体を検出し、青い立方体は除外。推定距離 約210cm (実際 2.07m)。
+- **実機**: ユーザーが実物を動かして確認し、問題なく動作した。記録した 88 フレームでは次のとおり:
+  - 実物を検出したときの縦横比は **2.03–2.8 (中央値 2.31)**。
+    斜めから見ると上面も写るので、横から見たときの値 (3.2–4.0) より小さくなる。
+    **下限 2.0 に対して余裕は小さい**。取りこぼしが出たら `min_aspect` を 1.8 程度まで下げる
+    (記録中の立方体は 1.0–1.2 なので、まだ区別できる)。
+  - 周囲にある青い物 (ケーブル等の細長い物、立方体) は、充填率 0.4–0.6 や縦横比 約1 で
+    すべて除外されていた。誤って FOUND になった例は無い。
+
+### 制約・既知の問題
+
+- **近すぎると検出しない**: 物体が画面の大半を占めて端で切れると、縦横比が 1.7–1.9 に下がり除外される。
+  30 cm 程度より離して使う。
+- **色だけで候補を出している**: 同じくらいの大きさ・形の青い直方体 (箱、本など) は区別できない。
+  大きさで絞るなら、距離が分かる状況 (机の上に固定したカメラなど) で長辺の画素数に上下限を付ける。
+- **端面 (5x4cm) を正面から見ると縦横比 1.25 なので検出しない**。
+- 白飛びすると (近距離・強い照明) 彩度が下がり S ≥ 80 から外れる。露光制御は未対応。
 
 ## 実機カメラのキャリブレーション
 
@@ -161,8 +210,10 @@ colcon test --packages-select fourth_camera && colcon test-result --verbose
 - [ ] 露光を固定してブレを減らしたうえで再校正する (現状 RMS 0.80 px。目標 0.5 px 以下)。
       ボードの傾きを 45° 程度まで増やすと焦点距離の精度も上がる
 - [ ] 必要ならシミュレーションのカメラにもレンズ歪み (`<distortion>`) を入れる
+- [ ] 直方体探索: 端面から見た姿勢や近距離でも検出できるようにする (例: 奥行きカメラ、
+      または輪郭から直方体の頂点を当てはめて 3 辺の長さの比で判定)
+- [ ] 直方体探索: 物理インジケータ (LED 等) が必要なら `/camera/target_found` を購読するノードを追加
 - [ ] 実機用の色しきい値のチューニング (または実行時に調整できるよう動的パラメータ対応)
-- [ ] 実際にやりたい画像処理の内容に合わせて検出ノードを置き換え / 追加する
-      (現在の色ブロブ検出は動作確認用の雛形)
+- [ ] 赤色ブロブ検出 (`detector:=color`) は動作確認用の雛形。不要になったら削除してよい
 - [ ] シミュレーションで対象物を自動で動かす仕組み (現在は GUI で手動ドラッグ)
 - [ ] 露光・ゲイン等の V4L2 コントロールをパラメータ化

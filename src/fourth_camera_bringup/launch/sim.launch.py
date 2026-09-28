@@ -22,6 +22,7 @@ def generate_launch_description():
         DeclareLaunchArgument('world', default_value=os.path.join(pkg, 'worlds', 'camera_world.sdf')),
         DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('viewer', default_value='true'),
+        DeclareLaunchArgument('detector', default_value='color', choices=['color', 'cuboid']),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(
@@ -46,6 +47,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(pkg, 'launch', 'processing.launch.py')),
             launch_arguments={'use_sim_time': 'true',
-                              'viewer': LaunchConfiguration('viewer')}.items(),
+                              'viewer': LaunchConfiguration('viewer'),
+                              'detector': LaunchConfiguration('detector')}.items(),
         ),
     ])

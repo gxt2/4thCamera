@@ -20,6 +20,7 @@ def generate_launch_description():
             default_value=os.path.join(pkg, 'config', 'usb_camera_calibration.yaml'),
             description='camera_calibration YAML; empty = uncalibrated'),
         DeclareLaunchArgument('viewer', default_value='true'),
+        DeclareLaunchArgument('detector', default_value='color', choices=['color', 'cuboid']),
 
         Node(
             package='fourth_camera', executable='usb_camera_node',
@@ -32,6 +33,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(pkg, 'launch', 'processing.launch.py')),
             launch_arguments={'use_sim_time': 'false',
-                              'viewer': LaunchConfiguration('viewer')}.items(),
+                              'viewer': LaunchConfiguration('viewer'),
+                              'detector': LaunchConfiguration('detector')}.items(),
         ),
     ])

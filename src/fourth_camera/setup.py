@@ -21,6 +21,7 @@ setup(
         'console_scripts': [
             'usb_camera_node = fourth_camera.usb_camera_node:main',
             'color_detector_node = fourth_camera.color_detector_node:main',
+            'cuboid_finder_node = fourth_camera.cuboid_finder_node:main',
         ],
     },
 )

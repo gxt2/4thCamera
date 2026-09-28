@@ -9,4 +9,5 @@
     pixel_format: YUYV
     frame_id: camera_optical_frame
     # Path to a camera_calibration YAML. Empty = uncalibrated CameraInfo.
+    # real.launch.py overrides this with config/usb_camera_calibration.yaml by default.
     camera_info_file: ""

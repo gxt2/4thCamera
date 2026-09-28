@@ -2,7 +2,7 @@
 <!--
   Fixed camera looking at colored targets.
   Camera pose here MUST match the world->camera_link static TF in launch/sim.launch.py.
-  The camera sensor intrinsics mirror the real USB camera defaults (640x480, 30 fps).
+  The camera sensor mirrors the real USB camera (640x480, 30 fps, measured HFOV).
 -->
 <sdf version="1.9">
   <world name="camera_world">
@@ -58,8 +58,9 @@
           <topic>camera/image_raw</topic>
           <gz_frame_id>camera_optical_frame</gz_frame_id>
           <camera>
-            <!-- ~60 deg horizontal FOV, similar to a typical UVC webcam -->
-            <horizontal_fov>1.047</horizontal_fov>
+            <!-- Measured on the real USB camera (config/usb_camera_calibration.yaml):
+                 fx=653.7 at 640 px -> 52.2 deg. Lens distortion is NOT simulated. -->
+            <horizontal_fov>0.911</horizontal_fov>
             <image>
               <width>640</width>
               <height>480</height>

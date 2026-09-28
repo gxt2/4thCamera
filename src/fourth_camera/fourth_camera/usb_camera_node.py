@@ -13,7 +13,6 @@ import rclpy
 import yaml
 from cv_bridge import CvBridge
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import CameraInfo, Image
 
 
@@ -68,8 +67,10 @@ class UsbCameraNode(Node):
                 f'Requested {self.width}x{self.height}, device gave {actual[0]}x{actual[1]}')
 
         self.bridge = CvBridge()
-        self.image_pub = self.create_publisher(Image, 'image_raw', qos_profile_sensor_data)
-        self.info_pub = self.create_publisher(CameraInfo, 'camera_info', qos_profile_sensor_data)
+        # Reliable (depth 5) so both reliable and best-effort subscribers can connect.
+        # camera_calibration subscribes reliable when it starts before discovery completes.
+        self.image_pub = self.create_publisher(Image, 'image_raw', 5)
+        self.info_pub = self.create_publisher(CameraInfo, 'camera_info', 5)
 
         self._running = True
         self._thread = threading.Thread(target=self._capture_loop, daemon=True)

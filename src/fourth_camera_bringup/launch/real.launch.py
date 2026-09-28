@@ -15,8 +15,10 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('device', default_value='/dev/video0'),
-        DeclareLaunchArgument('camera_info_file', default_value='',
-                              description='camera_calibration YAML; empty = uncalibrated'),
+        DeclareLaunchArgument(
+            'camera_info_file',
+            default_value=os.path.join(pkg, 'config', 'usb_camera_calibration.yaml'),
+            description='camera_calibration YAML; empty = uncalibrated'),
         DeclareLaunchArgument('viewer', default_value='true'),
 
         Node(

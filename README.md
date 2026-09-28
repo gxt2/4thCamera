@@ -82,7 +82,25 @@ ros2 launch fourth_camera_bringup real.launch.py
 #   camera_info_file:=/path/to/calibration.yaml  (既定: config/usb_camera_calibration.yaml)
 ```
 
-シミュレーションでは Gazebo GUI で赤いボールをドラッグすると検出結果が追従する。
+### Gazebo の操作 (Harmonic GUI)
+
+| 操作 | 動き |
+|---|---|
+| 左ドラッグ / ホイール・右ドラッグ / 中ドラッグ (Shift+左) | 視点の平行移動 / ズーム / 回転 |
+| 物体をクリック → **T** | 移動モード。赤・緑・青の矢印をドラッグで x・y・z 方向に移動 |
+| 物体をクリック → **R** | 回転モード |
+| **Esc** | 選択モードに戻る |
+| 左下 ▶ / ⏸ | シミュレーションの再生 / 一時停止 |
+
+- カメラは原点の黒い小箱 (高さ 1 m, +x 方向を 0.3 rad 見下ろし)。映像は Gazebo ではなく rqt_image_view に出る。
+- 直方体とボールは物理演算の対象 (static でない) なので、宙に置くと落ちる。
+- コマンドで動かす場合:
+  ```bash
+  gz service -s /world/camera_world/set_pose --reqtype gz.msgs.Pose --reptype gz.msgs.Boolean \
+    --timeout 2000 --req 'name: "blue_cuboid", position: {x: 1.5, y: 0.2, z: 0.02}'
+  ```
+- **同じ PC で sim.launch.py を 2 つ同時に起動しないこと**。ワールド名・gz トピック・ROS トピックが
+  同じなので、画像・/clock・set_pose が 2 つの Gazebo の間で混ざる。
 
 ## デモ: 青い直方体の探索とインジケータ
 
